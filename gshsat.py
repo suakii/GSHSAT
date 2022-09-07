@@ -89,6 +89,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 line = line.rstrip()
                 data = line.decode("utf-8")
                 data = data.split(",")
+                # print(data)
                 self.update_plots_data(*data)
 
     def update_plots_data(self, *args):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './MainWindow_suakii.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -55,6 +55,21 @@ class Ui_MainWindow(object):
         self.graphicsView = GraphicsLayoutWidget(self.centralwidget)
         self.graphicsView.setGeometry(QtCore.QRect(270, 30, 951, 731))
         self.graphicsView.setObjectName("graphicsView")
+        self.programControlGroup_2 = QtWidgets.QGroupBox(self.centralwidget)
+        self.programControlGroup_2.setGeometry(QtCore.QRect(10, 180, 251, 71))
+        self.programControlGroup_2.setObjectName("programControlGroup_2")
+        self.widget = QtWidgets.QWidget(self.programControlGroup_2)
+        self.widget.setGeometry(QtCore.QRect(10, 30, 184, 32))
+        self.widget.setObjectName("widget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.saveButton = QtWidgets.QPushButton(self.widget)
+        self.saveButton.setObjectName("saveButton")
+        self.horizontalLayout.addWidget(self.saveButton)
+        self.stopButton = QtWidgets.QPushButton(self.widget)
+        self.stopButton.setObjectName("stopButton")
+        self.horizontalLayout.addWidget(self.stopButton)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -71,14 +86,7 @@ class Ui_MainWindow(object):
         self.refreshButton.setText(_translate("MainWindow", "Refresh"))
         self.comPortLabel.setText(_translate("MainWindow", "COM Port:"))
         self.label_3.setText(_translate("MainWindow", "BAUD RATE:"))
+        self.programControlGroup_2.setTitle(_translate("MainWindow", "Record Control"))
+        self.saveButton.setText(_translate("MainWindow", "Save"))
+        self.stopButton.setText(_translate("MainWindow", "Stop"))
 from pyqtgraph import GraphicsLayoutWidget
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())

@@ -12,10 +12,14 @@ int i = 0;
 double x[4];
 void loop()
 {
-    x[0] = 5*sin(i);
-    x[1] = 5*-sin(i);
-    x[2] = 5*cos(i);
-    x[3] = 5*-cos(i);
+    //x[0] = 5*sin(i);
+    x[0] = 10;
+    
+    //x[1] = 5*-sin(i);
+    x[1] = -10;
+    
+    x[2] = 5*sin(i);
+    x[3] = 5*cos(i);
     XbeeSerial.print(x[0]);
     XbeeSerial.print(",");
     XbeeSerial.print(x[1]);

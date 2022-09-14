@@ -3,7 +3,7 @@ import sys
 import serial
 import serial.tools.list_ports as list_serial_ports
 import threading
-
+from dataRecord import DataRecord
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
@@ -28,16 +28,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.graphicsView.nextRow()
         self.graphicsView.addItem(self.graph_3)
         self.graphicsView.addItem(self.graph_4)
+        ##data
+        self.log_record = DataRecord()
 
         self.setup_connections()
         self.refresh_serial_baud_rate()
         self.serialConnection = None
         self.serialMonitor = None
-        self.dummyPort = False
+        self.dummyPort = True
+
+
 
     def setup_connections(self):
         self.connectButton.clicked.connect(self.init_serial)
         self.refreshButton.clicked.connect(self.refresh_serial_baud_rate)
+
+        self.saveButton.clicked.connect(self.log_record.start)
+        self.stopButton.clicked.connect(self.log_record.stop)
 
     def init_serial(self):
         if not self.dummyPort:
@@ -66,10 +73,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.check_serial_dummy_event()
 
     def check_serial_dummy_event(self):
-        serial_thread = threading.Timer(1, self.check_serial_dummy_event)
-        serial_thread.start()
-        print("dummy event call")
-        self.update_plots_data(*random.sample(range(0, 20), 4))
+        serial_dummy_thread = threading.Timer(0.5, self.check_serial_dummy_event)
+        serial_dummy_thread.daemon = True
+        serial_dummy_thread.start()
+        dumy_data = random.sample(range(0, 20), 4)
+        self.update_plots_data(*dumy_data)
+        self.log_record.save(dumy_data)
 
     def discon_serial(self):
         self.serialConnection.close()
@@ -79,6 +88,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def check_serial_event(self):
         serial_thread = threading.Timer(1, self.check_serial_event)
+        serial_thread.daemon = True
 
         if self.serialConnection.is_open:
             serial_thread.start()
@@ -88,6 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 line = self.serialConnection.readline()
                 line = line.rstrip()
                 data = line.decode("utf-8")
+                self.log_record.save(data)
                 data = data.split(",")
                 # print(data)
                 self.update_plots_data(*data)

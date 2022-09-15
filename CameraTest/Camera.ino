@@ -22,8 +22,6 @@ ArduCAM myCAM(OV2640, PIN_CAM_SS);
 //IF the FRAMES_NUM is 0X06, take seven photos
 //IF the FRAMES_NUM is 0XFF, continue shooting until the FIFO is full
 #define   FRAMES_NUM    0x00
-// 現状，1枚を仮定する．SD保存で上書きが発生しないようにするロジックなど，1枚を想定してコーディングしてある．
-// → 複数枚対応した
 
 
 #define  FINENAME_MAX_LEN 12

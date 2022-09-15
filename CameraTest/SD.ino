@@ -3,10 +3,6 @@
 Sd_t sd;
 
 
-// フォルダ分け or 接頭辞
-// #define SD_IS_MKDIR
-
-
 void SD_Init() {
 	sd.logFileName = "log.txt";
 
@@ -30,7 +26,7 @@ void SD_Init() {
 		sd.DirName[3] = '0' + i%10;
 		if (! SD.exists(SD_GetDirName() + sd.logFileName) ) {
 			#ifdef SD_IS_MKDIR
-				SD.mkdir(sd.DirName);		// フォルダわけではなく，接頭辞の場合コメントアウト！
+				SD.mkdir(sd.DirName);
 			#else
 			#endif
 			break;

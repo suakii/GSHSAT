@@ -1,26 +1,25 @@
 #include "./SD.h"
 #include "./Camera.h"
-
+#include "./XBee.h"
 
 void setup()
 {
 	// Wire(Arduino-I2C)
 	Wire.begin();
-	Serial.begin(115200);
+	
+  //Serial.begin(57600);
+  XBEE_Init();
+  //Serial.println("Xbee Init done");
 
-//	SD_Init();	
-	CAM_Init();		
-	Serial.println(F("Init done"));
+    //SD_Init();
+	CAM_Init();
 	delay(300);
 }
 
 void loop()
 {
-//	CAM_TakePic();		
-//	delay(3000);			
     CAM_SendPic();
-    //delay(1000);
-    
+    delayMicroseconds(15);
 
 }
 

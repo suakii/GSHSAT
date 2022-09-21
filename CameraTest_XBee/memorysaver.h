@@ -1,4 +1,4 @@
 #ifndef _MEMORYSAVER_
 #define _MEMORYSAVER_
-#define OV2640_MINI_2MP_PLUS
+#define OV2640_MINI_2MP
 #endif	//_MEMORYSAVER_

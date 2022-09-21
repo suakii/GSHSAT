@@ -2,8 +2,11 @@
 
 
 void XBEE_Init() {
-	XbeeSerial.begin(57600);
+	XbeeSerial.begin(9600);
+
 }
 
 void XBEE_Test() {
+
 }
+

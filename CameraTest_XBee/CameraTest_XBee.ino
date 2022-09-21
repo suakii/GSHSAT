@@ -4,25 +4,34 @@
 
 void setup()
 {
-	// Wire(Arduino-I2C)
-	Wire.begin();
+    // Wire(Arduino-I2C)
 	
-  //Serial.begin(57600);
-  XBEE_Init();
-  //Serial.println("Xbee Init done");
+  Wire.begin();
+  Serial.begin(9600);
 
-    //SD_Init();
-	CAM_Init();
-	delay(300);
+	XBEE_Init();
+
+  //SD_Init();
+	
+  CAM_Init();
+  
+  while (!Serial);
+  while (!XbeeSerial);
+ 	Serial.println("Xbee init done");
+
+	delay(500);
 }
 
 void loop()
 {
-    CAM_SendPic();
-    delayMicroseconds(15);
+    //test
 
+  Serial.println("Call Cam Send Pic");
+
+  CAM_SendPic();
+  
+  //delayMicroseconds(15);
+  delay(1000);
 }
-
-
 //ToDO
 //using serial start camera send request arudion 

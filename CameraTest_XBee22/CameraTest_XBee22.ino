@@ -1,12 +1,10 @@
-#include "./Camera.h"
-#include "./SD.h"
 #include <Wire.h>
+#include "ArduCAM.h"
 #include <SPI.h>
-#include "./ArduCAM.h"
-#include "./XBee.h"
+#include "memorysaver.h"
+#include <SoftwareSerial.h>
 
-//SoftwareSerial XbeeSerial(2, 3); // RX, TX
-
+SoftwareSerial mySerial(2, 3); // RX, TX
 
 #define BMPIMAGEOFFSET 66
 const char bmp_header[BMPIMAGEOFFSET] PROGMEM =
@@ -22,22 +20,22 @@ const int CS = 7;
 bool is_header = false;
 int mode = 0;
 uint8_t start_capture = 0;
-#if defined (OV2640_MINI_2MP_PLUS)
+#if defined (OV2640_MINI_2MP)
 ArduCAM myCAM( OV2640, CS );
 #else
 ArduCAM myCAM( OV5642, CS );
 #endif
 uint8_t read_fifo_burst(ArduCAM myCAM);
-
-void CAM_Init() {
+void setup() {
   // put your setup code here, to run once:
   uint8_t vid, pid;
   uint8_t temp;
 
-  //Wire.begin();
-  //Serial.begin(9600);
+  Wire.begin();
+  Serial.begin(9600);
+  mySerial.begin(9600);
 
-  //Serial.println(F("ACK CMD ArduCAM Start! END"));
+  mySerial.println(F("ACK CMD ArduCAM Start! END"));
   Serial.println(F("ACK CMD ArduCAM Start! END"));
   // set the CS as an output:
   pinMode(CS, OUTPUT);
@@ -54,11 +52,11 @@ void CAM_Init() {
     myCAM.write_reg(ARDUCHIP_TEST1, 0x55);
     temp = myCAM.read_reg(ARDUCHIP_TEST1);
     if (temp != 0x55) {
-      //Serial.println(F("ACK CMD SPI interface Error! END"));
-      //Serial.println(F("ACK CMD SPI interface Error! END"));
+      mySerial.println(F("ACK CMD SPI interface Error! END"));
+      Serial.println(F("ACK CMD SPI interface Error! END"));
       delay(1000); continue;
     } else {
-      //      //Serial.println(F("ACK CMD SPI interface OK. END"));
+      //      mySerial.println(F("ACK CMD SPI interface OK. END"));
       Serial.println(F("ACK CMD SPI interface OK. END"));
       break;
     }
@@ -70,12 +68,12 @@ void CAM_Init() {
     myCAM.rdSensorReg8_8(OV2640_CHIPID_HIGH, &vid);
     myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
     if ((vid != 0x26 ) && (( pid != 0x41 ) || ( pid != 0x42 ))) {
-      //Serial.println(F("ACK CMD Can't find OV2640 module! END"));
+      mySerial.println(F("ACK CMD Can't find OV2640 module! END"));
       Serial.println(F("ACK CMD Can't find OV2640 module! END"));
       delay(1000); continue;
     }
     else {
-      //      //Serial.println(F("ACK CMD OV2640 detected. END"));
+      //      mySerial.println(F("ACK CMD OV2640 detected. END"));
       Serial.println(F("ACK CMD OV2640 detected. END"));
       break;
     }
@@ -83,83 +81,48 @@ void CAM_Init() {
   //Change to JPEG capture mode and initialize the OV5642 module
   myCAM.set_format(JPEG);
   myCAM.InitCAM();
-  myCAM.OV2640_set_JPEG_size(OV2640_320x240);
-  //myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
-  
-  //myCAM.OV2640_set_Light_Mode(Auto);
-  //myCAM.OV2640_set_Special_effects(Normal);
-  
+  myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
+  myCAM.OV2640_set_Light_Mode(Auto);
+  myCAM.OV2640_set_Special_effects(Normal);
   delay(1000);
   myCAM.clear_fifo_flag();
 }
-void CAM_SendPic() {
+void loop() {
   // put your main code here, to run repeatedly:
   uint8_t temp = 0xff, temp_last = 0;
   bool is_header = false;
-  //delay(500);
-
-  static uint32_t rec_count = 0;
-
-	Serial.print("Xbee Available: ");
-  Serial.println(XbeeSerial.available());
-
-  Serial.println("Cam_Send_Pic in");
-
-
-  //if (Serial.available())
-  if (XbeeSerial.available())
+  //  if (Serial.available())
+  if (mySerial.available())
   {
-    Serial.println("1");
-    
-    temp = XbeeSerial.read();
-    Serial.print("Xbeeread: ");
+    //    temp = Serial.read();
+    temp = mySerial.read();
+    Serial.print("Read from Xbee");
     Serial.println(temp);
-
-    
-    //start_capture = 1;
-
     switch (temp)
     {
       case '0':
-        start_capture = 0;
-        break;
-
-      case '1':
-        Serial.println("Capter flage setting");
         start_capture = 1;
         break;
-
     }
   }
-  Serial.println("2");
-
   if (start_capture == 1)
   {
-    Serial.println("3");
-
     myCAM.flush_fifo();
     myCAM.clear_fifo_flag();
     //Start capture
     myCAM.start_capture();
-    Serial.println("Capture Start");
-    start_capture = 1;
-    
+    start_capture = 0;
   }
-  Serial.println("44");
-
   if (myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
   {
-     Serial.println("4");
-
-    //Serial.println(F("ACK CMD CAM Capture Done. END"));
-    Serial.println(F("ACK CMD CAM Capture Done. END"));
+    //    mySerial.println(F("ACK CMD CAM Capture Done. END"));
+    //    Serial.println(F("ACK CMD CAM Capture Done. END"));
     delay(50);
     read_fifo_burst(myCAM);
     //Clear the capture done flag
     myCAM.clear_fifo_flag();
   }
 
-  Serial.println("End");
 
 
 }
@@ -169,20 +132,18 @@ uint8_t read_fifo_burst(ArduCAM myCAM)
   uint8_t temp = 0, temp_last = 0;
   uint32_t length = 0;
   length = myCAM.read_fifo_length();
-  //Serial.println(length, DEC);
-  //Serial.print("Image Size: ,");
-  //Serial.println(length, DEC);
-
+  //  mySerial.println(length, DEC);
+  //  Serial.println(length, DEC);
   if (length >= MAX_FIFO_SIZE) //512 kb
   {
-    //Serial.println(F("ACK CMD Over size. END"));
-    //Serial.println(F("ACK CMD Over size. END"));
+    //    Serial.println(F("ACK CMD Over size. END"));
+    mySerial.println(F("ACK CMD Over size. END"));
     return 0;
   }
   if (length == 0 ) //0 kb
   {
-    //Serial.println(F("ACK CMD Size is 0. END"));
-    //Serial.println(F("ACK CMD Size is 0. END"));
+    //    Serial.println(F("ACK CMD Size is 0. END"));
+    mySerial.println(F("ACK CMD Size is 0. END"));
     return 0;
   }
   myCAM.CS_LOW();
@@ -195,15 +156,15 @@ uint8_t read_fifo_burst(ArduCAM myCAM)
     temp =  SPI.transfer(0x00);
     if (is_header == true)
     {
-      XbeeSerial.write(temp);
+      mySerial.write(temp);
     }
     else if ((temp == 0xD8) & (temp_last == 0xFF))
     {
       is_header = true;
-      ////Serial.println(F("ACK IMG END"));
-      Serial.println(F("ACK IMG END"));
-      XbeeSerial.write(temp_last);
-      XbeeSerial.write(temp);
+      //      mySerial.println(F("ACK IMG END"));
+      //      Serial.println(F("ACK IMG END"));
+      mySerial.write(temp_last);
+      mySerial.write(temp);
     }
     if ( (temp == 0xD9) && (temp_last == 0xFF) ) //If find the end ,break while,
       break;

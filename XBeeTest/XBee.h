@@ -5,6 +5,7 @@
 #include "./PIN_ASSIGN.h"
 
 SoftwareSerial XbeeSerial(PIN_XBEE_TX, PIN_XBEE_RX);
+
 void XBEE_Init();
 void XBEE_Test();
 

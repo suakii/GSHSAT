@@ -64,6 +64,7 @@ void loop()
   Serial2.println(x[3]);
   
   Serial.println("send lgo");
+  Serial.println(i);
   
 
 //    

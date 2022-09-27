@@ -3,15 +3,16 @@
 #include "ArduCAM.h"
 #include <SPI.h>
 #include "memorysaver.h"
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
+#define mySerial Serial2
 
 
 #define   FRAMES_NUM    0x00
 
-const int CS = 7;
+const int CS = 10;//change to 10 becuase xbee using Serial2
 bool CAM1_EXIST = false;
 bool stopMotion = false;
-SoftwareSerial mySerial(2, 3); // RX, TX for Xbee
+//SoftwareSerial mySerial(2, 3); // RX, TX for Xbee
 ArduCAM myCAM(OV2640, CS);
 long int streamStartTime;
 bool start_capture = false;
@@ -21,9 +22,9 @@ void setup() {
     uint8_t vid, pid;
     uint8_t temp;
     Wire.begin();
-    Serial.begin(9600); //921600
+    Serial.begin(57600); //921600
     Serial.println(F("ArduCAM Start!"));
-    mySerial.begin(9600);
+    mySerial.begin(57600);
     mySerial.println(F("ArduCAM Start!"));
     // set the CS output:
     pinMode(CS, OUTPUT);
@@ -101,7 +102,7 @@ void loop() {
         myCAMSendToSerial(myCAM);
         double fps = ((millis() - streamStartTime) / 1000);
         Serial.println("fps: " + String(1 / fps));
-        //start_capture = false;
+        start_capture = false;
     }
     delay(500);
 
@@ -209,4 +210,3 @@ void myCAMSendToSerial(ArduCAM myCAM) {
 
     }
 }
-

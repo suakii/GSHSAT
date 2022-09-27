@@ -41,8 +41,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ##image
         self.camera_image_pixmap = None
         self.image_num = 1
-        self.receive_image_size = None
-        self.receive_image_array = None
 
 
 
@@ -79,9 +77,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.serialConnection = serial.Serial(
                     port=port,
                     baudrate=int(self.baudRateDropdown.currentText()),
-                    timeout = 1
-                    )
-
+                    timeout=0)
             except Exception as e:
                 print("Error trying to connect to the specified COM port:")
                 print(e)
@@ -111,7 +107,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connectButton.clicked.connect(self.init_serial)
 
     def show_camera_image(self):
-        camera_image_thread = threading.Timer(1, self.show_camera_image)
+        camera_image_thread = threading.Timer(0.5, self.show_camera_image)
         camera_image_thread.daemon = True
 
         camera_image_thread.start()
@@ -119,44 +115,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.imageLabel.setPixmap(self.camera_image_pixmap)
 
     def check_serial_event(self):
-        serial_thread = threading.Timer(0.5, self.check_serial_event)
+        serial_thread = threading.Timer(1, self.check_serial_event)
         serial_thread.daemon = True
 
         if self.serialConnection.is_open:
             serial_thread.start()
             if self.serialConnection.in_waiting:
-                line = self.serialConnection.readline()
-                print(line)
+                # graph and file save
+                # end_of_line = b'\n'
+
+                # line = self.serialConnection.readline()
+                # if len(line) > 0:
+                # print(line)
                 #
-                line = line.rstrip()
-
-                data = line.decode("utf-8")
-                # self.log_record.save(data)
-                data = data.split(",")
-                # self.update_plots_data(*data)
-
-                # image show
+                # line = line.rstrip()
+                # data = line.decode("utf-8")
+                # # # self.log_record.save(data)
+                # data = data.split(",")
+                # print(data)
+                # # self.update_plots_data(*data)
+                #
+                # #image show
                 today = datetime.date.today()
                 fileName = str(self.image_num) + "_" + str(today.year) + str(today.month) + str(today.day) + ".jpg"
-                tmpfile = open(fileName, "wb")
-                if data[0] == 'FifoLength:':
-                    imgsize = int(data[1])
+                tempfile = open(fileName, "wb")
+                prevbyte = None
+                written = False
+                done = False
+                datasize = 1
+                while not done:
+                    try:
+                        currbyte = self.serialConnection.read(1)
+                        datasize += 1
+                        # print("currbyte ", currbyte)
+                        if prevbyte:
+                            if ord(currbyte) == 0xd8 and ord(prevbyte) == 0xff:
+                                tempfile.write(prevbyte)
+                                written = True
+                            if written:
+                                tempfile.write(currbyte)
+                                # print("write file, ", currbyte)
+                            if ord(currbyte) == 0xd9 and ord(prevbyte) == 0xff:
+                                tempfile.close()
+                                print("temp file close")
+                                done = True
 
-                elif data[0] == 'Image:':
-                    for i in range(1, len(data) - 1):
-                        current_byte = int(data[i]).to_bytes(1, 'big')
-                        tmpfile.write(current_byte)
+                        # import time
+                        # time.sleep(0.5)
 
-                    self.image_num += 1
-                    tmpfile.close()
-                    print(fileName + " saved")
+                        prevbyte = currbyte
+                    except Exception as e:
+                        pass
+                self.image_num += 1
+                print(fileName + " saved")
+                print(str(datasize) + " read")
 
-                elif data[0] == 'Image transfer OK.':
-                    fileName_pixmap = str(self.image_num - 1) + "_" + str(today.year) + str(today.month) + str(
-                        today.day) + ".jpg"
+                fileName_pixmap = str(self.image_num - 1) + "_" + str(today.year) + str(today.month) + str(
+                today.day) + ".jpg"
+                self.camera_image_pixmap = QPixmap(fileName_pixmap)
+                self.imageLabel.setPixmap(self.camera_image_pixmap)
 
-                    self.camera_image_pixmap = QPixmap(fileName_pixmap)
-                    self.imageLabel.setPixmap(self.camera_image_pixmap)
+
+
 
 
 

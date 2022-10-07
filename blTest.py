@@ -1,5 +1,7 @@
 import random
 import sys
+import time
+
 import serial
 import serial.tools.list_ports as list_serial_ports
 import threading
@@ -42,7 +44,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.camera_image_pixmap = None
         self.image_num = 1
 
-
+        self.bltStart = False
 
     def setup_connections(self):
         self.connectButton.clicked.connect(self.init_serial)
@@ -54,15 +56,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cameraStartButton.clicked.connect(self.camera_start)
         self.cameraStopButton.clicked.connect(self.camera_stop)
 
+    #bluetooth connect Testing
     def camera_start(self):
         if self.serialConnection:
-            self.serialConnection.write(bytearray([1]))
-            print("Send to Arduino 1")
+            self.serialConnection.write(b'+++\r\n')
+            time.sleep(0.5)
+            self.serialConnection.write(b'ATH\r\n')
+            time.sleep(0.5)
+            self.serialConnection.write(b'ATD00019558C7FD\r\n')
+            self.bltStart = True
+            print("Send to BLE Pairing AT Command")
 
+            self.serialConnection.write(bytearray([1]))
+            print("Send to 1 to arduion ")
 
     def camera_stop(self):
         if self.serialConnection:
-            self.serialConnection.write(bytearray([0]))
+            self.serialConnection.write(b'+++\r\n')
+            time.sleep(0.5)
+            self.serialConnection.write(b'ATH\r\n')
+            time.sleep(0.5)
+            print("Send to BLE Pairing off AT Command")
 
 
 
@@ -120,7 +134,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.serialConnection.is_open:
             serial_thread.start()
-            if self.serialConnection.in_waiting:
+            if self.serialConnection.in_waiting and self.bltStart:
                 # graph and file save
                 # end_of_line = b'\n'
 
@@ -154,7 +168,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 written = True
                             if written:
                                 tempfile.write(currbyte)
-                                print(currbyte)
+                                # print(currbyte)
                             if ord(currbyte) == 0xd9 and ord(prevbyte) == 0xff:
                                 tempfile.close()
                                 print("temp file close")
@@ -174,9 +188,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 today.day) + ".jpg"
                 self.camera_image_pixmap = QPixmap(fileName_pixmap)
                 self.imageLabel.setPixmap(self.camera_image_pixmap)
-
-
-
 
 
 

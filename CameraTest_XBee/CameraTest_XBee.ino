@@ -116,6 +116,7 @@ void loop() {
     myCAM.start_capture();
     start_capture = 1;
   }
+  
   delay(1000);
 
   if (myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
@@ -179,6 +180,8 @@ uint8_t read_fifo_burst(ArduCAM myCAM)
       break;
       
     delayMicroseconds(500);
+    //delayMicroseconds(200);
+    
   }
   myCAM.CS_HIGH();
   is_header = false;

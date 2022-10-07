@@ -27,6 +27,9 @@ ArduCAM myCAM( OV2640, CS );
 ArduCAM myCAM( OV5642, CS );
 #endif
 uint8_t read_fifo_burst(ArduCAM myCAM);
+unsigned long int streamStartTime; 
+
+
 void setup() {
   // put your setup code here, to run once:
   uint8_t vid, pid;
@@ -37,7 +40,7 @@ void setup() {
   mySerial.begin(115200);
 
   //mySerial.println(F("ACK CMD ArduCAM Start! END"));
-  Serial.println(F("ACK CMD ArduCAM Start! END"));
+  //Serial.println(F("ACK CMD ArduCAM Start! END"));
   // set the CS as an output:
   pinMode(CS, OUTPUT);
   digitalWrite(CS, HIGH);
@@ -54,11 +57,11 @@ void setup() {
     temp = myCAM.read_reg(ARDUCHIP_TEST1);
     if (temp != 0x55) {
       mySerial.println(F("ACK CMD SPI interface Error! END"));
-      Serial.println(F("ACK CMD SPI interface Error! END"));
+      //Serial.println(F("ACK CMD SPI interface Error! END"));
       delay(1000); continue;
     } else {
       //      mySerial.println(F("ACK CMD SPI interface OK. END"));
-      Serial.println(F("ACK CMD SPI interface OK. END"));
+      //Serial.println(F("ACK CMD SPI interface OK. END"));
       break;
     }
   }
@@ -70,12 +73,12 @@ void setup() {
     myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
     if ((vid != 0x26 ) && (( pid != 0x41 ) || ( pid != 0x42 ))) {
       //mySerial.println(F("ACK CMD Can't find OV2640 module! END"));
-      Serial.println(F("ACK CMD Can't find OV2640 module! END"));
+      //Serial.println(F("ACK CMD Can't find OV2640 module! END"));
       delay(1000); continue;
     }
     else {
       //      mySerial.println(F("ACK CMD OV2640 detected. END"));
-      Serial.println(F("ACK CMD OV2640 detected. END"));
+      //Serial.println(F("ACK CMD OV2640 detected. END"));
       break;
     }
   }
@@ -88,6 +91,8 @@ void setup() {
   delay(1000);
   myCAM.clear_fifo_flag();
 }
+
+
 void loop() {
   // put your main code here, to run repeatedly:
   uint8_t temp = 0xff, temp_last = 0;
@@ -105,6 +110,11 @@ void loop() {
       case 1:
         start_capture = 1;
         break;
+      
+      case 0:
+        start_capture = 0;
+        break;
+        
     }
   }
   if (start_capture == 1)
@@ -112,19 +122,22 @@ void loop() {
     myCAM.flush_fifo();
     myCAM.clear_fifo_flag();
     //Start capture
-    Serial.println("Start Capture");
+    //Serial.println("Start Capture");
     myCAM.start_capture();
     start_capture = 1;
   }
-  
-  delay(1000);
+  delay(300);
 
   if (myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
   {
     //    mySerial.println(F("ACK CMD CAM Capture Done. END"));
-     Serial.println(F("ACK CMD CAM Capture Done. END"));
+    //Serial.println(F("ACK CMD CAM Capture Done. END"));
     delay(50);
+    //streamStartTime = millis();
     read_fifo_burst(myCAM);
+    //Serial.print("Image Read Time: ");
+    //Serial.println(millis() - streamStartTime);
+
     //Clear the capture done flag
     myCAM.clear_fifo_flag();
   }
@@ -142,13 +155,13 @@ uint8_t read_fifo_burst(ArduCAM myCAM)
   //  Serial.println(length, DEC);
   if (length >= MAX_FIFO_SIZE) //512 kb
   {
-    Serial.println(F("ACK CMD Over size. END"));
+    //Serial.println(F("ACK CMD Over size. END"));
     //mySerial.println(F("ACK CMD Over size. END"));
     return 0;
   }
   if (length == 0 ) //0 kb
   {
-    Serial.println(F("ACK CMD Size is 0. END"));
+    //Serial.println(F("ACK CMD Size is 0. END"));
     //mySerial.println(F("ACK CMD Size is 0. END"));
     return 0;
   }
@@ -163,25 +176,23 @@ uint8_t read_fifo_burst(ArduCAM myCAM)
     if (is_header == true)
     {
       mySerial.write(temp);
-      Serial.println(temp);
+      //Serial.println(temp);
     }
     else if ((temp == 0xD8) & (temp_last == 0xFF))
     {
       is_header = true;
       //      mySerial.println(F("ACK IMG END"));
-      Serial.println(F("ACK IMG END"));
+      //Serial.println(F("ACK IMG END"));
       mySerial.write(temp_last);
       mySerial.write(temp);
-      Serial.println(temp_last);
-      Serial.println(temp);
+      //Serial.println(temp_last);
+      //Serial.println(temp);
       
     }
     if ( (temp == 0xD9) && (temp_last == 0xFF) ) //If find the end ,break while,
       break;
       
-    delayMicroseconds(500);
-    //delayMicroseconds(200);
-    
+    delayMicroseconds(300);
   }
   myCAM.CS_HIGH();
   is_header = false;
